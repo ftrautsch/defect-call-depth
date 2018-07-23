@@ -1,0 +1,12 @@
+projectName = HikariCP
+tagName = HikariCP-2.7.0
+username =
+password =
+hostname = localhost
+port = 27017
+authenticationDB =
+database = comfort
+sslEnabled =
+instrumentationClassPattern = com.zaxxer.hikari.*
+debugEnabled = true
+debugOut = /tmp/out

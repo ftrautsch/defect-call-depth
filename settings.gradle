@@ -1,0 +1,5 @@
+rootProject.name = 'defect-call-depth'
+include 'dcd-agent'
+include 'dcd-listener'
+include 'dcd-config'
+

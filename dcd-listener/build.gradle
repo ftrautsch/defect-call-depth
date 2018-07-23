@@ -1,0 +1,28 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'maven'
+}
+
+dependencies {
+    compile project(':dcd-config')
+    compile group: 'de.ugoe.cs', name: 'jSHARK', version: '1.0-SNAPSHOT'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4jVersion
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: log4jVersion
+    compile group:"com.fasterxml.jackson.core", name:"jackson-core", version: jacksonVersion
+    compile group:"com.fasterxml.jackson.core", name:"jackson-databind", version: jacksonVersion
+    compile group:"com.fasterxml.jackson.core", name:"jackson-annotations", version: jacksonVersion
+    compile group: 'com.github.danielfelgar', name: 'morphia-logging-log4j2', version: '1.0.1'
+    compile group: 'org.mongodb', name: 'mongodb-driver', version: '3.6.1'
+    compile group: 'org.mongodb.morphia', name: 'morphia', version: '1.3.2'
+    compile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
+    compile group: 'com.google.guava', name: 'guava', version: '25.1-jre'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.1'
+}
+
+shadowJar {
+    configurations = [project.configurations.compile]
+    baseName = 'dcd-listener'
+    classifier = null
+}

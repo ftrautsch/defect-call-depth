@@ -1,0 +1,19 @@
+allprojects {
+    apply plugin: "java"
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+
+    group 'de.ugoe.cs'
+    version '1.0.0'
+
+    sourceCompatibility = 1.8
+
+    ext {
+        log4jVersion = "2.11.0"
+        jacksonVersion = "2.9.6"
+    }
+}
+
