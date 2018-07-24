@@ -19,6 +19,7 @@ package de.ugoe.cs.listener;
 import de.ugoe.cs.smartshark.SmartSHARKAdapter;
 import de.ugoe.cs.smartshark.model.Mutation;
 import de.ugoe.cs.smartshark.model.MutationResult;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,7 +50,7 @@ public class CallController {
     public synchronized void onTestStart() {
         if (testStarted) {
             throw new CallControllerError("Looks like several tests executed in parallel in the same JVM, "
-                    + "thus coverage per test can't be recorded correctly.");
+                    + "thus call depth and num calls can not be recorded.");
         }
         testStarted = true;
         CallHelper.initialize();
@@ -57,7 +58,8 @@ public class CallController {
 
     public synchronized void onTestFinish(String name) {
         testStarted = false;
-        //System.out.println(CallHelper.getHitMutations());
+        System.out.println("Results for test: "+name);
+        System.out.println(CallHelper.getHitMutations());
 
         for(MutationResult res: smartSHARKAdapter.getMutationResultsForTestState(name)) {
             // If the test do not cover this mutation, we can not store the numCalls or call depth
@@ -67,14 +69,13 @@ public class CallController {
 
             Mutation mutation = smartSHARKAdapter.getMutationById(res.getMutationId());
 
+            String[] locationParts = mutation.getLocation().split("\\.");
+            String mutationLocationClass = String.join(".", Arrays.copyOfRange(locationParts, 0, locationParts.length-1));
 
-            List<Long> results = CallHelper.getHitMutations().get(mutation.getLocation()+"%%"+mutation.getLineNumber());
-            if(results == null) {
-                System.out.println("RESULTS NULL FOR "+name+" with results:" +res);
-            }
+            List<Long> results = CallHelper.getHitMutations().get(mutationLocationClass+"%%"+mutation.getLineNumber());
 
-            if(res.getResult().equals("KILLED")) {
-                System.out.println("INVALID RESULT FOR "+name+" with results:" +res);
+            if(results == null && res.getResult().equals("KILLED")) {
+                System.out.println("INVALID RESULT FOR "+name+" with mutation in:" +mutationLocationClass+":"+mutation.getLineNumber());
             } else {
                 //System.out.println("RESULT FOR "+name+ ": "+String.valueOf(results.get(0))+", "+String.valueOf(results.get(1)));
                 //res.setCallDepth(results.get(0));

@@ -33,19 +33,21 @@ class MethodAdapter extends MethodVisitor implements Opcodes {
     private SortedSet<Integer> methodLines = new TreeSet<>();
     private SortedSet<Integer> linesWithMutationsWithoutMethod = new TreeSet<>();
     private String fqn;
+    private String className;
 
     public MethodAdapter(final MethodVisitor mv, SortedSet<Integer> mutationLines, String fqn, SortedSet<Integer> methodLines,
-                         SortedSet<Integer> linesWithMutationsWithoutMethod) {
+                         SortedSet<Integer> linesWithMutationsWithoutMethod, String className) {
         super(ASM6, mv);
         this.mutationLines = mutationLines;
         this.fqn = fqn;
         this.methodLines = methodLines;
         this.linesWithMutationsWithoutMethod = linesWithMutationsWithoutMethod;
+        this.className = className.replace("/", ".");
     }
 
     @Override
     public void visitLineNumber(int line, Label start) {
-        if(methodLines.first().equals(line)) {
+        if(methodLines.isEmpty() || methodLines.first().equals(line)) {
             mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/listener/CallHelper", "raiseDepth", "()V", false);
         }
 
@@ -61,7 +63,7 @@ class MethodAdapter extends MethodVisitor implements Opcodes {
 
         mv.visitLineNumber(line, start);
 
-        if(methodLines.last().equals(line)) {
+        if( methodLines.isEmpty() || methodLines.last().equals(line)) {
             mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/listener/CallHelper", "lowerDepth", "()V", false);
         }
     }
@@ -69,7 +71,7 @@ class MethodAdapter extends MethodVisitor implements Opcodes {
 
     private void enhanceMethod(int line) {
         System.out.println("Enhancing: " + fqn + " at line: " + line);
-        mv.visitLdcInsn(fqn);
+        mv.visitLdcInsn(className);
         mv.visitLdcInsn(new Integer(line));
         mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/listener/CallHelper", "hitMutation", "(Ljava/lang/String;I)V", false);
     }

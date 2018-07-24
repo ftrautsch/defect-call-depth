@@ -49,6 +49,7 @@ public class CallHelper {
         List<Long> callDepthAndCalls = new ArrayList<>();
         callDepthAndCalls.add(callDepth);
         callDepthAndCalls.add(numCalls);
+        System.out.println("HIT "+className+" on line: "+lineNumber);
 
         hitMutations.put(className+"%%"+lineNumber, callDepthAndCalls);
     }

@@ -30,10 +30,10 @@ import org.objectweb.asm.Opcodes;
 class ClassAdapter extends ClassVisitor implements Opcodes {
     private String className;
     private Map<Integer, String> methodInformation = new HashMap<>();
-    private Map<String, SortedSet<Integer>> insertMutationProbes = new HashMap<>();
+    private SortedSet<Integer> insertMutationProbes = new TreeSet<>();
 
     public ClassAdapter(final ClassVisitor cv, String className, Map<Integer, String> methodInformation,
-                        Map<String, SortedSet<Integer>> insertMutationProbes) {
+                        SortedSet<Integer> insertMutationProbes) {
         super(ASM6, cv);
         this.className = className;
         this.methodInformation = methodInformation;
@@ -46,20 +46,25 @@ class ClassAdapter extends ClassVisitor implements Opcodes {
         String fqn = className.replace("/", ".") + "." + name;
         MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
 
-        SortedSet<Integer> lines = new TreeSet<>();
+        // We set the lines of method here, as we need to know the first and the last line of each method
+        // so that we can raise and lower the call depth
+        SortedSet<Integer> linesOfMethod = new TreeSet<>();
         for(Map.Entry<Integer, String> entry: methodInformation.entrySet()) {
             if(entry.getValue().equals(name + "%%" + desc))
-                lines.add(entry.getKey());
+                linesOfMethod.add(entry.getKey());
         }
 
-        SortedSet<Integer> linesWithMutations = insertMutationProbes.getOrDefault(fqn, null);
+        // We create two sets here: First set is just the set of lines that have a mutation and
+        // the second set contains mutation lines that are not part of any method (i.e., mutations
+
+        SortedSet<Integer> linesWithMutations = insertMutationProbes;
         SortedSet<Integer> linesWithMutationsWithoutMethod = new TreeSet<>();
         if(linesWithMutations != null) {
             linesWithMutationsWithoutMethod.addAll(linesWithMutations);
             linesWithMutationsWithoutMethod.removeAll(methodInformation.keySet());
         }
 
-        return mv == null ? null : new MethodAdapter(mv, linesWithMutations,
-                fqn, lines, linesWithMutationsWithoutMethod);
+        return mv == null ? null : new MethodAdapter(mv, insertMutationProbes,
+                fqn, linesOfMethod, linesWithMutationsWithoutMethod, className);
     }
 }

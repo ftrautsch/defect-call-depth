@@ -17,8 +17,6 @@
 package de.ugoe.cs.agent;
 
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;

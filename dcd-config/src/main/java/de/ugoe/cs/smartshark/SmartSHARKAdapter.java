@@ -16,6 +16,7 @@
 
 package de.ugoe.cs.smartshark;
 
+import static java.util.Arrays.copyOfRange;
 import static org.mongodb.morphia.aggregation.Group.addToSet;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.sum;
@@ -31,6 +32,7 @@ import de.ugoe.cs.smartshark.model.Tag;
 import de.ugoe.cs.smartshark.model.TestState;
 import de.ugoe.cs.smartshark.model.VCSSystem;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -150,7 +152,6 @@ public class SmartSHARKAdapter {
                         }
                 );
 
-
         // Now query all mutations that are generated
         Query<TestState> query = datastore.createQuery(TestState.class)
                 .field("_id").in(testStatesWithMutationResults);
@@ -164,9 +165,11 @@ public class SmartSHARKAdapter {
             Mutation mut = mutationMap.get(mutation.getId());
 
             if(mut != null) {
-                SortedSet<Integer> lines = insertMutationsWithLines.getOrDefault(mut.getLocation(), new TreeSet<>());
+                String[] locationParts = mut.getLocation().split("\\.");
+                String className = String.join(".", Arrays.copyOfRange(locationParts, 0, locationParts.length-1));
+                SortedSet<Integer> lines = insertMutationsWithLines.getOrDefault(className, new TreeSet<>());
                 lines.add(mut.getLineNumber());
-                insertMutationsWithLines.put(mut.getLocation(), lines);
+                insertMutationsWithLines.put(className, lines);
             }
         });
 
