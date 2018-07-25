@@ -16,21 +16,23 @@
 
 package de.ugoe.cs;
 
+import de.ugoe.cs.dcd.listener.CallHelper;
+
 /**
  * @author Fabian Trautsch
  */
 public class B {
 
     public static void method1() {
-        de.ugoe.cs.listener.CallHelper.hitMutation("de.ugoe.cs.B", 25);
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.hitMutation("de.ugoe.cs.B", 25);
+        CallHelper.raiseDepth();
         method2();
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
+        CallHelper.lowerDepth();
     }
 
     public static void method2() {
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.raiseDepth();
         A.method3();
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
+        CallHelper.lowerDepth();
     }
 }

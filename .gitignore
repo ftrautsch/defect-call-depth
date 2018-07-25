@@ -4,7 +4,6 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff
-.idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/**/dictionaries
 .idea/**/shelf
@@ -15,12 +14,10 @@
 .idea/**/dataSources.local.xml
 .idea/**/sqlDataSources.xml
 .idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
 .idea/
 
 # Gradle
-.idea/**/gradle.xml
 .idea/**/libraries
 
 # CMake
@@ -94,3 +91,4 @@ gradle-app.setting
 hs_err_pid*
 
 defect-call-depth.properties
+defect-call-depth2.properties

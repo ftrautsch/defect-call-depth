@@ -11,14 +11,14 @@ dependencies {
 
 shadowJar {
     configurations = [project.configurations.compile]
-    exclude 'de/ugoe/cs/config/**'
+    exclude 'de/ugoe/cs/dcd/config/**'
     baseName = 'dcd-agent'
     classifier = null
 
     jar {
         manifest {
             attributes(
-                    'Premain-Class': 'de.ugoe.cs.agent.ASMInstrumenter',
+                    'Premain-Class': 'de.ugoe.cs.dcd.agent.ASMInstrumenter',
                     'Can-Retransform-Classes': true
             )
         }

@@ -14,29 +14,24 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.smartshark;
+package de.ugoe.cs.dcd.smartshark;
 
 import static java.util.Arrays.copyOfRange;
-import static org.mongodb.morphia.aggregation.Group.addToSet;
 import static org.mongodb.morphia.aggregation.Group.grouping;
-import static org.mongodb.morphia.aggregation.Group.sum;
 
-import de.ugoe.cs.config.ConfigurationReader;
+import de.ugoe.cs.dcd.config.ConfigurationReader;
 import com.github.danielfelgar.morphia.Log4JLoggerImplFactory;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import de.ugoe.cs.smartshark.model.Mutation;
-import de.ugoe.cs.smartshark.model.MutationResult;
 import de.ugoe.cs.smartshark.model.Project;
 import de.ugoe.cs.smartshark.model.Tag;
 import de.ugoe.cs.smartshark.model.TestState;
 import de.ugoe.cs.smartshark.model.VCSSystem;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -48,6 +43,7 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.logging.MorphiaLoggerFactory;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 
 /**
@@ -60,7 +56,7 @@ public class SmartSHARKAdapter {
     private Datastore datastore;
     private final ConfigurationReader config = ConfigurationReader.getInstance();
     private ObjectId commitId;
-    private Map<String, Set<MutationResult>> mutationResultMap = new HashMap<>();
+    private Map<String, TestState> testStates = new HashMap<>();
     private Map<ObjectId, Mutation> mutationMap = new HashMap<>();
 
 
@@ -77,6 +73,22 @@ public class SmartSHARKAdapter {
             singleton = new SmartSHARKAdapter();
         }
         return singleton;
+    }
+
+    public Set<String> getTestStateNames() {
+        Set<String> testStatesWithMutationResults = new HashSet<>();
+        datastore.createQuery(TestState.class)
+                .field("commit_id").equal(commitId)
+                .field("mutation_res").exists()
+                .field("mutation_res").notEqual(null)
+                .project("_id", true)
+                .project("name", true)
+                .forEach(
+                        testState ->  {
+                            testStatesWithMutationResults.add(testState.getName());
+                        }
+                );
+        return testStatesWithMutationResults;
     }
 
     private void setCommitId() {
@@ -129,8 +141,14 @@ public class SmartSHARKAdapter {
         return mutationMap.get(mutationId);
     }
 
-    public Set<MutationResult> getMutationResultsForTestState(String testName) {
-        return mutationResultMap.get(testName);
+    public TestState getTestStateForName(String testName) {
+        return testStates.get(testName);
+    }
+
+    public void storeTestState(TestState testState) {
+        UpdateOperations<TestState> ops = datastore.createUpdateOperations(TestState.class)
+                .set("mutation_res", testState.getMutationResults());
+        datastore.update(testState, ops);
     }
 
     public Map<String,SortedSet<Integer>> getMutationsWithLines() {
@@ -140,6 +158,7 @@ public class SmartSHARKAdapter {
         Set<ObjectId> testStatesWithMutationResults = new HashSet<>();
         datastore.createQuery(TestState.class)
                 .field("commit_id").equal(commitId)
+                .field("name").equal(config.getTestStatePattern())
                 .field("mutation_res").exists()
                 .field("mutation_res").notEqual(null)
                 .project("_id", true)
@@ -147,7 +166,7 @@ public class SmartSHARKAdapter {
                 .project("mutation_res", true)
                 .forEach(
                         testState ->  {
-                            mutationResultMap.put(testState.getName(), testState.getMutationResults());
+                            testStates.put(testState.getName(), testState);
                             testStatesWithMutationResults.add(testState.getId());
                         }
                 );

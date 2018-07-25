@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.listener;
+package de.ugoe.cs.dcd.listener;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -48,7 +48,7 @@ public class JUnitListenerTest {
     public static class TestedClass {
         public static void method1(boolean decision) {
             if(decision) {
-                de.ugoe.cs.listener.CallHelper.hitMutation("de.ugoe.cs.listener.TestedClass", 49);
+                CallHelper.hitMutation("de.ugoe.cs.listener.TestedClass", 49);
             }
         }
     }

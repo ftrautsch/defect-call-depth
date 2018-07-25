@@ -14,28 +14,33 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.agent;
+package de.ugoe.cs.dcd.agent;
 
+import java.util.HashMap;
 import java.util.Map;
-import org.objectweb.asm.ClassVisitor;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
  * @author Fabian Trautsch
  */
-public class ClassInformationAdapter extends ClassVisitor implements Opcodes {
-    private Map<Integer, String> classInformation;
+public class MethodInformationAdapter extends MethodVisitor implements Opcodes {
+    private Map<Integer, String> classInformation = new HashMap<>();
+    private String method;
 
-    public ClassInformationAdapter(final ClassVisitor cv, Map<Integer, String> classInformation) {
-        super(ASM6, cv);
+    public MethodInformationAdapter(final MethodVisitor mv, Map<Integer, String> classInformation, String method) {
+        super(ASM6, mv);
         this.classInformation = classInformation;
+        this.method = method;
     }
 
     @Override
-    public MethodVisitor visitMethod(final int access, final String name,
-                                     final String desc, final String signature, final String[] exceptions) {
-        MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
-        return mv == null ? null : new MethodInformationAdapter(mv, classInformation, name+"%%"+desc);
+    public void visitLineNumber(int line, Label start) {
+        classInformation.put(line, method);
+        mv.visitLineNumber(line, start);
     }
+
 }

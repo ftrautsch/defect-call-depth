@@ -6,7 +6,7 @@ allprojects {
         mavenLocal()
     }
 
-    group 'de.ugoe.cs'
+    group 'de.ugoe.cs.dcd'
     version '1.0.0'
 
     sourceCompatibility = 1.8

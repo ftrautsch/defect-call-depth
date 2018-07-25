@@ -38,7 +38,7 @@
                 <properties>
             <property>
                 <name>listener</name>
-                    <value>de.ugoe.cs.listener.JUnitListener</value>
+                    <value>de.ugoe.cs.dcd.listener.JUnitListener</value>
             </property>
         </properties>
                   <argLine>${surefireArgLine}</argLine>

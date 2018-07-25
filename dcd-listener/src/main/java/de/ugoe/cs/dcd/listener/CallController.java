@@ -14,21 +14,36 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.listener;
+package de.ugoe.cs.dcd.listener;
 
-import de.ugoe.cs.smartshark.SmartSHARKAdapter;
+import de.ugoe.cs.dcd.smartshark.SmartSHARKAdapter;
 import de.ugoe.cs.smartshark.model.Mutation;
 import de.ugoe.cs.smartshark.model.MutationResult;
+import de.ugoe.cs.smartshark.model.TestState;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.FileAppender;
+import org.apache.logging.log4j.core.config.AppenderRef;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
 /**
  * @author Fabian Trautsch
  */
 public class CallController {
-    private static Logger logger = LogManager.getLogger(CallController.class);
+    private static final Logger logger = LogManager.getLogger();
     private boolean testStarted;
 
     private SmartSHARKAdapter smartSHARKAdapter = SmartSHARKAdapter.getInstance();
@@ -37,7 +52,15 @@ public class CallController {
     static CallController singleton;
 
     private CallController() {
-        // TODO: Get all mutations for project in hashmap Map<ObjectId, Mutation>
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        PatternLayout layout = PatternLayout.newBuilder().withPattern("%d [%t] %-5p - %msg%n").build();
+        Appender appender = FileAppender.newBuilder().withFileName("/tmp/dcd.log")
+                .withName("File").withLayout(layout).build();
+        appender.start();
+        config.addAppender(appender);
+        config.getRootLogger().addAppender(appender, Level.WARN, null);
+        ctx.updateLoggers();
     }
 
     public static synchronized CallController getInstance() {
@@ -58,12 +81,12 @@ public class CallController {
 
     public synchronized void onTestFinish(String name) {
         testStarted = false;
-        System.out.println("Results for test: "+name);
-        System.out.println(CallHelper.getHitMutations());
+        Map<String, SortedSet<Integer>> problems = new HashMap<>();
+        TestState testState = smartSHARKAdapter.getTestStateForName(name);
 
-        for(MutationResult res: smartSHARKAdapter.getMutationResultsForTestState(name)) {
+        for(MutationResult res: testState.getMutationResults()) {
             // If the test do not cover this mutation, we can not store the numCalls or call depth
-            if(res.getResult().equals("NO_COVERAGE")) {
+            if(res.getResult().equals("NO_COVERAGE") || res.getCallDepth() != null || res.getNumCalls() != null) {
                 continue;
             }
 
@@ -72,27 +95,22 @@ public class CallController {
             String[] locationParts = mutation.getLocation().split("\\.");
             String mutationLocationClass = String.join(".", Arrays.copyOfRange(locationParts, 0, locationParts.length-1));
 
+
             List<Long> results = CallHelper.getHitMutations().get(mutationLocationClass+"%%"+mutation.getLineNumber());
 
-            if(results == null && res.getResult().equals("KILLED")) {
-                System.out.println("INVALID RESULT FOR "+name+" with mutation in:" +mutationLocationClass+":"+mutation.getLineNumber());
+            if(results == null) {
+                if(res.getResult().equals("KILLED") || res.getResult().equals("SURVIVED")) {
+                    SortedSet<Integer> problemsInTest = problems.getOrDefault(mutationLocationClass, new TreeSet<>());
+                    problemsInTest.add(mutation.getLineNumber());
+                    problems.put(mutationLocationClass, problemsInTest);
+                }
             } else {
-                //System.out.println("RESULT FOR "+name+ ": "+String.valueOf(results.get(0))+", "+String.valueOf(results.get(1)));
-                //res.setCallDepth(results.get(0));
-                //res.setNumCalls(results.get(1));
+                res.setCallDepth(results.get(0));
+                res.setNumCalls(results.get(1));
             }
-
         }
-
-        //TODO: Store results in database
-        // Get test by name
-        // go through all mutation results
-        // for each mutationresult:
-        // if result: no coverage => continue
-        // lookup mutation by id in hashmap
-        // lookup location in CallHelper.getHitMutations()
-        // lookup line number
-        // store call_depth, numCalls in mutation_res for test
+        smartSHARKAdapter.storeTestState(testState);
+        logger.warn("Detected the following problems for test "+name+": "+problems);
     }
 
 

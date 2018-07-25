@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.listener;
+package de.ugoe.cs.dcd.listener;
 
 
 import org.junit.runner.Description;

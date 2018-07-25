@@ -1,24 +1,39 @@
 {
   "configuration": {
-    "status": "error",
+    "status": "WARN",
     "appenders": {
       "Console": {
         "name": "STDOUT",
         "PatternLayout": {
           "pattern": "%highlight{%d [%t] %-5p %c - %msg%n}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}"
         }
+      },
+      "File": {
+        "name": "MyFile",
+        "immediateFlush": true,
+        "fileName": "/tmp/dcd.log",
+        "PatternLayout": {
+          "pattern": "%highlight{%d [%t] %-5p %c - %msg%n}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}"
+        }
       }
     },
     "loggers": {
-      "logger" : {
+      "logger" : [
+        {
         "name": "org.mongodb.driver",
         "level": "WARN"
-      },
+        }
+      ],
       "root": {
         "level": "debug",
         "AppenderRef": [
           {
-            "ref": "STDOUT"
+            "ref": "STDOUT",
+            "level": "info"
+          },
+          {
+            "ref": "MyFile",
+            "level": "warn"
           }
         ]
       }

@@ -16,40 +16,42 @@
 
 package de.ugoe.cs;
 
+import de.ugoe.cs.dcd.listener.CallHelper;
+
 /**
  * @author Fabian Trautsch
  */
 public class A {
     public void method1(String name) {
         if(name.equals("INTEST")) {
-            de.ugoe.cs.listener.CallHelper.hitMutation("de.ugoe.cs.A", 25);
+            CallHelper.hitMutation("de.ugoe.cs.A", 25);
             System.out.println("IN");
         } else {
             System.out.println("NOTIN");
         }
-        de.ugoe.cs.listener.CallHelper.hitMutation("de.ugoe.cs.A", 30);
+        CallHelper.hitMutation("de.ugoe.cs.A", 30);
         while(name.equals("INTEST")) {
         	break;
         }
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.raiseDepth();
         method2(name, 1);
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.lowerDepth();
+        CallHelper.raiseDepth();
         method2("asdsa", 2);
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.lowerDepth();
+        CallHelper.raiseDepth();
         Blub blub = new Blub();
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.lowerDepth();
+        CallHelper.raiseDepth();
         blub.method1();
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
+        CallHelper.lowerDepth();
     }
 
     public static void method2(String name, int blub) {
         if(name.equals("INTEST")) {
             System.out.println("MUTATION");
         } else {
-            de.ugoe.cs.listener.CallHelper.hitMutation("de.ugoe.cs.A", 45);
+            CallHelper.hitMutation("de.ugoe.cs.A", 45);
             System.out.println("METHOD2");
         }
         return;
@@ -61,13 +63,13 @@ public class A {
     }
 
     public static void method4() {
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.raiseDepth();
         B.method1();
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
+        CallHelper.lowerDepth();
     }
     
     public static String metho5() {
-        de.ugoe.cs.listener.CallHelper.hitMutation("de.ugoe.cs.A", 60);
+        CallHelper.hitMutation("de.ugoe.cs.A", 60);
         return "method5";
     }
 

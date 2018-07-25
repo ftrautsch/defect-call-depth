@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.agent;
+package de.ugoe.cs.dcd.agent;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,7 +48,7 @@ class MethodAdapter extends MethodVisitor implements Opcodes {
     @Override
     public void visitLineNumber(int line, Label start) {
         if(methodLines.isEmpty() || methodLines.first().equals(line)) {
-            mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/listener/CallHelper", "raiseDepth", "()V", false);
+            mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/dcd/listener/CallHelper", "raiseDepth", "()V", false);
         }
 
         if(!linesWithMutationsWithoutMethod.isEmpty() && (fqn.endsWith("<init>") || fqn.endsWith("<clinit>"))) {
@@ -64,7 +64,7 @@ class MethodAdapter extends MethodVisitor implements Opcodes {
         mv.visitLineNumber(line, start);
 
         if( methodLines.isEmpty() || methodLines.last().equals(line)) {
-            mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/listener/CallHelper", "lowerDepth", "()V", false);
+            mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/dcd/listener/CallHelper", "lowerDepth", "()V", false);
         }
     }
 
@@ -73,6 +73,6 @@ class MethodAdapter extends MethodVisitor implements Opcodes {
         System.out.println("Enhancing: " + fqn + " at line: " + line);
         mv.visitLdcInsn(className);
         mv.visitLdcInsn(new Integer(line));
-        mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/listener/CallHelper", "hitMutation", "(Ljava/lang/String;I)V", false);
+        mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/dcd/listener/CallHelper", "hitMutation", "(Ljava/lang/String;I)V", false);
     }
 }

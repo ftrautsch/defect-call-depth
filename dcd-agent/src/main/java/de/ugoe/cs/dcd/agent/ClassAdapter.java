@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.agent;
+package de.ugoe.cs.dcd.agent;
 
 import java.util.HashMap;
 import java.util.Map;

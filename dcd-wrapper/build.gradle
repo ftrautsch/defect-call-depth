@@ -1,0 +1,18 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'maven'
+}
+
+dependencies {
+    compile project(':dcd-config')
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
+    compile group: 'org.apache.maven.shared', name: 'maven-invoker', version: '3.0.0'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+}
+
+shadowJar {
+    configurations = [project.configurations.compile]
+    baseName = 'dcd-wrapper'
+    classifier = null
+}

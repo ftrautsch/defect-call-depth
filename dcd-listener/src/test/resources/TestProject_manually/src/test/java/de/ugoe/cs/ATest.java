@@ -18,6 +18,7 @@ package de.ugoe.cs;
 
 import static org.junit.Assert.assertEquals;
 
+import de.ugoe.cs.dcd.listener.CallHelper;
 import org.junit.Test;
 
 /**
@@ -28,27 +29,27 @@ public class ATest {
     
     @Test
     public void test1() {
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.raiseDepth();
     	A newA = new A();
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.lowerDepth();
+        CallHelper.raiseDepth();
         newA.method1("INTEST");
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
+        CallHelper.lowerDepth();
     }
     
 
     @Test
     public void test2() {
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.raiseDepth();
         A.method4();
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
+        CallHelper.lowerDepth();
     }
     
     @Test
     public void test3() {
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.raiseDepth();
     	assertEquals(A.metho5(), "method5");
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
+        CallHelper.lowerDepth();
     }
 
 }

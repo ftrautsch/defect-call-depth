@@ -18,6 +18,7 @@ package de.ugoe.cs;
 
 import static org.junit.Assert.assertEquals;
 
+import de.ugoe.cs.dcd.listener.CallHelper;
 import org.junit.Test;
 
 /**
@@ -28,8 +29,8 @@ public class BTest {
 
     @Test
     public void test1() {
-        de.ugoe.cs.listener.CallHelper.raiseDepth();
+        CallHelper.raiseDepth();
         B.method1();
-        de.ugoe.cs.listener.CallHelper.lowerDepth();
+        CallHelper.lowerDepth();
     }
 }

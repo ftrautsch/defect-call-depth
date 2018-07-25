@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.listener;
+package de.ugoe.cs.dcd.listener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,8 +49,6 @@ public class CallHelper {
         List<Long> callDepthAndCalls = new ArrayList<>();
         callDepthAndCalls.add(callDepth);
         callDepthAndCalls.add(numCalls);
-        System.out.println("HIT "+className+" on line: "+lineNumber);
-
         hitMutations.put(className+"%%"+lineNumber, callDepthAndCalls);
     }
 

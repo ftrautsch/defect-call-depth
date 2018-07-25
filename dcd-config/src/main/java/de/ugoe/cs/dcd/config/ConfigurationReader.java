@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.config;
+package de.ugoe.cs.dcd.config;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -40,6 +40,7 @@ public class ConfigurationReader {
     private String debugOut;
     private List<Pattern> instrumentationClassPattern;
     private List<Pattern> excludeClassPattern;
+    private String testStatePattern;
 
     private static ConfigurationReader singleton;
 
@@ -60,6 +61,7 @@ public class ConfigurationReader {
             debugOut = (String) properties.get("debugOut");
             instrumentationClassPattern = loadClassPattern((String) properties.get("instrumentationClassPattern"));
             excludeClassPattern = loadClassPattern((String) properties.get("excludeClassPattern"));
+            testStatePattern = (String) properties.get("testStatePattern");
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Couldn't load defect-call-depth.properties");
@@ -76,6 +78,10 @@ public class ConfigurationReader {
     public String getFirstInstrumentationClassPatternAsString() {
         Pattern firstPattern = instrumentationClassPattern.get(0);
         return firstPattern.toString().substring(0, firstPattern.toString().length()-1);
+    }
+
+    public String getTestStatePattern() {
+        return testStatePattern;
     }
 
     private String getDefectCallDepthHome() {

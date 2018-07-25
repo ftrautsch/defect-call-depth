@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.ugoe.cs.agent;
+package de.ugoe.cs.dcd.agent;
 
-import de.ugoe.cs.config.ConfigurationReader;
-import de.ugoe.cs.smartshark.SmartSHARKAdapter;
+import de.ugoe.cs.dcd.config.ConfigurationReader;
+import de.ugoe.cs.dcd.smartshark.SmartSHARKAdapter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,8 +43,8 @@ import org.objectweb.asm.ClassWriter;
 public class ASMInstrumenter implements ClassFileTransformer {
     private static Logger logger = LogManager.getLogger(ASMInstrumenter.class);
 
-    private ConfigurationReader configuration = ConfigurationReader.getInstance();
-    private SmartSHARKAdapter sharkAdapter = SmartSHARKAdapter.getInstance();
+    private final ConfigurationReader configuration = ConfigurationReader.getInstance();
+    private final SmartSHARKAdapter sharkAdapter = SmartSHARKAdapter.getInstance();
     private Map<String, SortedSet<Integer>> insertMutationProbes = new HashMap<>();
     private Map<Integer, String> methodInformation = new HashMap<>();
 
@@ -84,7 +83,6 @@ public class ASMInstrumenter implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain, byte[] bytes) throws IllegalClassFormatException {
-
 
         boolean enhanceClass = false;
 
