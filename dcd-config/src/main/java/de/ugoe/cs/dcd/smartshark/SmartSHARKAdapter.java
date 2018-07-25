@@ -16,13 +16,10 @@
 
 package de.ugoe.cs.dcd.smartshark;
 
-import static java.util.Arrays.copyOfRange;
-import static org.mongodb.morphia.aggregation.Group.grouping;
-
-import de.ugoe.cs.dcd.config.ConfigurationReader;
 import com.github.danielfelgar.morphia.Log4JLoggerImplFactory;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import de.ugoe.cs.dcd.config.ConfigurationReader;
 import de.ugoe.cs.smartshark.model.Mutation;
 import de.ugoe.cs.smartshark.model.Project;
 import de.ugoe.cs.smartshark.model.Tag;
@@ -50,14 +47,14 @@ import org.mongodb.morphia.query.UpdateOperations;
  * @author Fabian Trautsch
  */
 public class SmartSHARKAdapter {
-    private static Logger logger = LogManager.getLogger(SmartSHARKAdapter.class);
+    private final static Logger logger = LogManager.getLogger(SmartSHARKAdapter.class);
 
     private final Morphia morphia = new Morphia();
     private Datastore datastore;
     private final ConfigurationReader config = ConfigurationReader.getInstance();
     private ObjectId commitId;
-    private Map<String, TestState> testStates = new HashMap<>();
-    private Map<ObjectId, Mutation> mutationMap = new HashMap<>();
+    private final Map<String, TestState> testStates = new HashMap<>();
+    private final Map<ObjectId, Mutation> mutationMap = new HashMap<>();
 
 
     private static SmartSHARKAdapter singleton;
@@ -84,9 +81,7 @@ public class SmartSHARKAdapter {
                 .project("_id", true)
                 .project("name", true)
                 .forEach(
-                        testState ->  {
-                            testStatesWithMutationResults.add(testState.getName());
-                        }
+                        testState -> testStatesWithMutationResults.add(testState.getName())
                 );
         return testStatesWithMutationResults;
     }

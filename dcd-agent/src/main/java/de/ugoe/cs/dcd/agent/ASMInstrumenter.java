@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.util.HashMap;
@@ -41,17 +40,16 @@ import org.objectweb.asm.ClassWriter;
  * @author Fabian Trautsch
  */
 public class ASMInstrumenter implements ClassFileTransformer {
-    private static Logger logger = LogManager.getLogger(ASMInstrumenter.class);
+    private final static Logger logger = LogManager.getLogger(ASMInstrumenter.class);
 
     private final ConfigurationReader configuration = ConfigurationReader.getInstance();
-    private final SmartSHARKAdapter sharkAdapter = SmartSHARKAdapter.getInstance();
-    private Map<String, SortedSet<Integer>> insertMutationProbes = new HashMap<>();
-    private Map<Integer, String> methodInformation = new HashMap<>();
+    private final Map<String, SortedSet<Integer>> insertMutationProbes;
+    private final Map<Integer, String> methodInformation = new HashMap<>();
 
     //private SmartSHARKAdapter sharkAdapter = new SmartSHARKAdapter(configuration);
 
-    public ASMInstrumenter() {
-        insertMutationProbes = sharkAdapter.getMutationsWithLines();
+    private ASMInstrumenter() {
+        insertMutationProbes = SmartSHARKAdapter.getInstance().getMutationsWithLines();
 
         /*
         insertMutationProbes.put("de.ugoe.cs.testproject.A.<init>", new TreeSet<Integer>(){{add(2);}});
@@ -68,10 +66,6 @@ public class ASMInstrumenter implements ClassFileTransformer {
     }
 
     private Boolean classNameMatchesAny(String className, List<Pattern> patterns) {
-        if(patterns.isEmpty()) {
-            return null;
-        }
-
         for (Pattern pattern : patterns) {
             if (pattern.matcher(className.toLowerCase()).matches()) {
                 return true;
@@ -82,15 +76,17 @@ public class ASMInstrumenter implements ClassFileTransformer {
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
-                            ProtectionDomain protectionDomain, byte[] bytes) throws IllegalClassFormatException {
+                            ProtectionDomain protectionDomain, byte[] bytes) {
 
         boolean enhanceClass = false;
 
         Boolean includePatternMatches = classNameMatchesAny(className, configuration.getInstrumentationClassPattern());
         Boolean excludePatternMatches = classNameMatchesAny(className, configuration.getExcludeClassPattern());
 
-        if((includePatternMatches != null && excludePatternMatches != null && includePatternMatches && !excludePatternMatches) ||
-                includePatternMatches != null && excludePatternMatches == null && includePatternMatches) {
+        if((!configuration.getInstrumentationClassPattern().isEmpty() &&
+                !configuration.getExcludeClassPattern().isEmpty() && includePatternMatches && !excludePatternMatches) ||
+                !configuration.getInstrumentationClassPattern().isEmpty() &&
+                        configuration.getExcludeClassPattern().isEmpty() && includePatternMatches) {
             enhanceClass = true;
         }
 
@@ -125,19 +121,18 @@ public class ASMInstrumenter implements ClassFileTransformer {
         reader.accept(visitor, 0);
         byte[] b = writer.toByteArray();
 
-        try {
-            // Create Directory path for debugging
-            if(configuration.isDebugEnabled()) {
-                System.out.println("Storing: "+className);
-                File output = new File(configuration.getDebugOut() + "/" + className + ".class");
-                output.getParentFile().mkdirs();
-                FileOutputStream fos = new FileOutputStream(output);
+        if (configuration.isDebugEnabled()) {
+            File output = new File(configuration.getDebugOut() + "/" + className + ".class");
+            try(FileOutputStream fos = new FileOutputStream(output)){
+                // Create Directory path for debugging
+                System.out.println("Storing: " + className);
+                boolean dirCreated = output.getParentFile().mkdirs();
+                logger.debug("Directory Created?: " + dirCreated);
                 fos.write(b);
-                fos.close();
+            } catch(IOException e){
+                System.out.println("Could not store class: " + className + ". Error:" + e);
+                logger.error("Could not store class: " + className + ". Error:" + e);
             }
-        } catch (IOException e) {
-            System.out.println("Could not store class: "+className+". Error:" + e);
-            logger.error("Could not store class: "+className+". Error:" + e);
         }
 
         return writer.toByteArray();

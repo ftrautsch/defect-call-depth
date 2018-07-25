@@ -28,7 +28,7 @@ public class CallHelper {
     private static long callDepth = -1;
     private static long numCalls = -1;
 
-    private static Map<String, List<Long>> hitMutations = new HashMap<>();
+    private final static Map<String, List<Long>> hitMutations = new HashMap<>();
 
     public static synchronized void initialize() {
         callDepth = -1;

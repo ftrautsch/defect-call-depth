@@ -16,10 +16,7 @@
 
 package de.ugoe.cs.dcd.agent;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -28,8 +25,8 @@ import org.objectweb.asm.Opcodes;
  * @author Fabian Trautsch
  */
 public class MethodInformationAdapter extends MethodVisitor implements Opcodes {
-    private Map<Integer, String> classInformation = new HashMap<>();
-    private String method;
+    private final Map<Integer, String> classInformation;
+    private final String method;
 
     public MethodInformationAdapter(final MethodVisitor mv, Map<Integer, String> classInformation, String method) {
         super(ASM6, mv);

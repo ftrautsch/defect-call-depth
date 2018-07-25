@@ -16,11 +16,7 @@
 
 package de.ugoe.cs.dcd.agent;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -29,11 +25,11 @@ import org.objectweb.asm.Opcodes;
  * @author Fabian Trautsch
  */
 class MethodAdapter extends MethodVisitor implements Opcodes {
-    private SortedSet<Integer> mutationLines = new TreeSet<>();
-    private SortedSet<Integer> methodLines = new TreeSet<>();
-    private SortedSet<Integer> linesWithMutationsWithoutMethod = new TreeSet<>();
-    private String fqn;
-    private String className;
+    private final SortedSet<Integer> mutationLines;
+    private final SortedSet<Integer> methodLines;
+    private final SortedSet<Integer> linesWithMutationsWithoutMethod;
+    private final String fqn;
+    private final String className;
 
     public MethodAdapter(final MethodVisitor mv, SortedSet<Integer> mutationLines, String fqn, SortedSet<Integer> methodLines,
                          SortedSet<Integer> linesWithMutationsWithoutMethod, String className) {

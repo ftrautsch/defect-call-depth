@@ -25,7 +25,7 @@ import org.objectweb.asm.Opcodes;
  * @author Fabian Trautsch
  */
 public class ClassInformationAdapter extends ClassVisitor implements Opcodes {
-    private Map<Integer, String> classInformation;
+    private final Map<Integer, String> classInformation;
 
     public ClassInformationAdapter(final ClassVisitor cv, Map<Integer, String> classInformation) {
         super(ASM6, cv);

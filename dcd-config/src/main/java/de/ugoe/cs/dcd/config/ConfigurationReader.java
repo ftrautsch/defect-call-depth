@@ -45,9 +45,9 @@ public class ConfigurationReader {
     private static ConfigurationReader singleton;
 
     private ConfigurationReader() {
-        try {
+        try(FileInputStream fis = new FileInputStream(getDefectCallDepthHome() + "/defect-call-depth.properties")){
             java.util.Properties properties = new java.util.Properties();
-            properties.load(new FileInputStream(getDefectCallDepthHome() + "/defect-call-depth.properties"));
+            properties.load(fis);
             projectName = (String) properties.get("projectName");
             tagName = (String) properties.get("tagName");
             username = (String) properties.get("username");
@@ -89,7 +89,7 @@ public class ConfigurationReader {
     }
 
     private ArrayList<Pattern> loadClassPattern(String instrumentationClassPattern) {
-        ArrayList<Pattern> result = new ArrayList<Pattern>();
+        ArrayList<Pattern> result = new ArrayList<>();
 
         if (instrumentationClassPattern == null || instrumentationClassPattern.isEmpty()) {
             return result;

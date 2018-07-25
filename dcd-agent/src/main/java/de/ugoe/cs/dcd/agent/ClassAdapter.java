@@ -16,7 +16,6 @@
 
 package de.ugoe.cs.dcd.agent;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -28,9 +27,9 @@ import org.objectweb.asm.Opcodes;
  * @author Fabian Trautsch
  */
 class ClassAdapter extends ClassVisitor implements Opcodes {
-    private String className;
-    private Map<Integer, String> methodInformation = new HashMap<>();
-    private SortedSet<Integer> insertMutationProbes = new TreeSet<>();
+    private final String className;
+    private final Map<Integer, String> methodInformation;
+    private final SortedSet<Integer> insertMutationProbes;
 
     public ClassAdapter(final ClassVisitor cv, String className, Map<Integer, String> methodInformation,
                         SortedSet<Integer> insertMutationProbes) {
