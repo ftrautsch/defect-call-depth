@@ -28,10 +28,6 @@
         "level": "debug",
         "AppenderRef": [
           {
-            "ref": "STDOUT",
-            "level": "info"
-          },
-          {
             "ref": "MyFile",
             "level": "warn"
           }

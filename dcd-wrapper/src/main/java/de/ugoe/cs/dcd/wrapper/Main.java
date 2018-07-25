@@ -17,9 +17,11 @@
 package de.ugoe.cs.dcd.wrapper;
 
 import de.ugoe.cs.dcd.smartshark.SmartSHARKAdapter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -28,17 +30,22 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
  * @author Fabian Trautsch
@@ -49,24 +56,32 @@ public class Main {
         SmartSHARKAdapter smartSHARKAdapter = SmartSHARKAdapter.getInstance();
 
         //Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.metrics.prometheus.HikariCPCollectorTest.noConnectionWithoutPoolName");}};
-        Set<String> testStateNames = smartSHARKAdapter.getTestStateNames();
+        Set<String> testStateNames = new HashSet<String>(){{add("org.apache.commons.beanutils.BeanUtils2TestCase.testSeparateInstances");}};
+        //Set<String> testStateNames = smartSHARKAdapter.getTestStateNames();
         for(String testName : testStateNames) {
-            changePropertiesFile(testName);
+            changePropertiesFile(args[1], args[2], args[3], testName);
             Path newMavenFile = changeMavenFile(projectRoot, testName);
             runMaven(newMavenFile);
         }
-
     }
 
 
-    public static void changePropertiesFile(String testName) throws IOException {
+
+
+    public static void changePropertiesFile(String projectName, String tagName, String instrumentationClassPattern,
+                                            String testName) throws IOException {
         Path dcdProperties = Paths.get(System.getenv("DCD_HOME"), "defect-call-depth.properties");
         FileInputStream in = new FileInputStream(dcdProperties.toFile());
         Properties props = new Properties();
         props.load(in);
         in.close();
 
+
         FileOutputStream out = new FileOutputStream(dcdProperties.toFile());
+        props.setProperty("projectName", projectName);
+        props.setProperty("tagName", tagName);
+        props.setProperty("instrumentationClassPattern", instrumentationClassPattern);
+
         props.setProperty("testStatePattern", testName);
         props.store(out, null);
         out.close();
@@ -111,7 +126,9 @@ public class Main {
         request.setPomFile(newPomFile.toFile());
         request.setGoals(Collections.singletonList("test"));
 
+
         Invoker invoker = new DefaultInvoker();
+
         InvocationResult result = invoker.execute(request);
 
         // Check if it returned successfully

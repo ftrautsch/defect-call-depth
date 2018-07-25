@@ -52,6 +52,7 @@ public class CallController {
     static CallController singleton;
 
     private CallController() {
+
         final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
         final Configuration config = ctx.getConfiguration();
         PatternLayout layout = PatternLayout.newBuilder().withPattern("%d [%t] %-5p - %msg%n").build();
@@ -61,6 +62,7 @@ public class CallController {
         config.addAppender(appender);
         config.getRootLogger().addAppender(appender, Level.WARN, null);
         ctx.updateLoggers();
+
     }
 
     public static synchronized CallController getInstance() {
