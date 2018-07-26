@@ -25,14 +25,14 @@ import java.util.Map;
  * @author Fabian Trautsch
  */
 public class CallHelper {
-    private static long callDepth = -1;
-    private static long numCalls = -1;
+    private static long callDepth = 0;
+    private static long numCalls = 0;
 
     private final static Map<String, List<Long>> hitMutations = new HashMap<>();
 
     public static synchronized void initialize() {
-        callDepth = -1;
-        numCalls = -1;
+        callDepth = 0;
+        numCalls = 0;
         hitMutations.clear();
     }
 
@@ -49,7 +49,11 @@ public class CallHelper {
         List<Long> callDepthAndCalls = new ArrayList<>();
         callDepthAndCalls.add(callDepth);
         callDepthAndCalls.add(numCalls);
-        hitMutations.put(className+"%%"+lineNumber, callDepthAndCalls);
+
+        // Only include the first time a mutation was hit
+        if(!hitMutations.containsKey(className+"%%"+lineNumber)) {
+            hitMutations.put(className + "%%" + lineNumber, callDepthAndCalls);
+        }
     }
 
     public synchronized static Map<String, List<Long>> getHitMutations() {

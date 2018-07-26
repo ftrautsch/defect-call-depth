@@ -46,7 +46,7 @@ public class Main {
         Path projectRoot = Paths.get(args[0]);
         SmartSHARKAdapter smartSHARKAdapter = SmartSHARKAdapter.getInstance();
 
-        Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.metrics.prometheus.HikariCPCollectorTest.noConnectionWithoutPoolName");}};
+        Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.pool.ConnectionPoolSizeVsThreadsTest.testSlowConnectionTimeBurstyWork");}};
         //Set<String> testStateNames = new HashSet<String>(){{add("org.apache.commons.beanutils.BeanUtils2TestCase.testSeparateInstances");}};
         //Set<String> testStateNames = smartSHARKAdapter.getTestStateNames();
         for(String testName : testStateNames) {

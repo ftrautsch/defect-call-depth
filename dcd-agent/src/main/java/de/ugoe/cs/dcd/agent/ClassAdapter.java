@@ -16,9 +16,11 @@
 
 package de.ugoe.cs.dcd.agent;
 
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -30,13 +32,15 @@ class ClassAdapter extends ClassVisitor implements Opcodes {
     private final String className;
     private final Map<Integer, String> methodInformation;
     private final SortedSet<Integer> insertMutationProbes;
+    private final List<Pattern> instrumentationPattern;
 
     public ClassAdapter(final ClassVisitor cv, String className, Map<Integer, String> methodInformation,
-                        SortedSet<Integer> insertMutationProbes) {
+                        SortedSet<Integer> insertMutationProbes, List<Pattern> instrumentationPatterns) {
         super(ASM6, cv);
         this.className = className;
         this.methodInformation = methodInformation;
         this.insertMutationProbes = insertMutationProbes;
+        this.instrumentationPattern = instrumentationPatterns;
     }
 
     @Override
@@ -44,14 +48,6 @@ class ClassAdapter extends ClassVisitor implements Opcodes {
                                      final String desc, final String signature, final String[] exceptions) {
         String fqn = className.replace("/", ".") + "." + name;
         MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
-
-        // We set the lines of method here, as we need to know the first and the last line of each method
-        // so that we can raise and lower the call depth
-        SortedSet<Integer> linesOfMethod = new TreeSet<>();
-        for(Map.Entry<Integer, String> entry: methodInformation.entrySet()) {
-            if(entry.getValue().equals(name + "%%" + desc))
-                linesOfMethod.add(entry.getKey());
-        }
 
         // We create two sets here: First set is just the set of lines that have a mutation and
         // the second set contains mutation lines that are not part of any method (i.e., mutations
@@ -64,6 +60,7 @@ class ClassAdapter extends ClassVisitor implements Opcodes {
         }
 
         return mv == null ? null : new MethodAdapter(mv, insertMutationProbes,
-                fqn, linesOfMethod, linesWithMutationsWithoutMethod, className);
+                fqn, linesWithMutationsWithoutMethod, className,
+                instrumentationPattern);
     }
 }

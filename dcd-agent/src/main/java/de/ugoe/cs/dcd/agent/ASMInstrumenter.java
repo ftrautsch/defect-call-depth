@@ -117,7 +117,8 @@ public class ASMInstrumenter implements ClassFileTransformer {
         ClassReader reader = new ClassReader(bytes);
         ClassWriter writer = new NonClassloadingClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
         ClassVisitor visitor = new ClassAdapter(writer, className,
-                methodInformation, insertMutationProbes.get(className.replace("/", ".")));
+                methodInformation, insertMutationProbes.get(className.replace("/", ".")),
+                configuration.getInstrumentationClassPattern());
         reader.accept(visitor, 0);
         byte[] b = writer.toByteArray();
 

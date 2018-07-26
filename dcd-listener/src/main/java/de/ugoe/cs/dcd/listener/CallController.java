@@ -86,7 +86,7 @@ public class CallController {
 
         for(MutationResult res: testState.getMutationResults()) {
             // If the test do not cover this mutation, we can not store the numCalls or call depth
-            if(res.getResult().equals("NO_COVERAGE") || res.getCallDepth() != null || res.getNumCalls() != null) {
+            if(res.getResult().equals("NO_COVERAGE")) {
                 continue;
             }
 
