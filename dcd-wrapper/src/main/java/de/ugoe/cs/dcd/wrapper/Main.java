@@ -26,7 +26,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -44,14 +43,32 @@ import org.apache.maven.shared.invoker.MavenInvocationException;
 public class Main {
     public static void main(String[] args) {
         Path projectRoot = Paths.get(args[0]);
+
+        Map<String, String> propertyValuesToChange = new HashMap<>();
+        propertyValuesToChange.put("projectName", args[1]);
+        propertyValuesToChange.put("tagName", args[2]);
+        propertyValuesToChange.put("instrumentationClassPattern", args[3]);
+        // We need to set the properties here first, because otherwise the adapter would have the wrong project
+        try {
+
+            changePropertiesFile(propertyValuesToChange);
+        } catch (IOException e) {
+            System.out.println("ERROR: "+e);
+            return;
+        }
+
+
         SmartSHARKAdapter smartSHARKAdapter = SmartSHARKAdapter.getInstance();
 
-        Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.pool.ConnectionPoolSizeVsThreadsTest.testSlowConnectionTimeBurstyWork");}};
+
+        //Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.osgi.OSGiBundleTest.checkInject");}};
+        //Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.pool.TestConcurrentBag.testConcurrentBag");}};
         //Set<String> testStateNames = new HashSet<String>(){{add("org.apache.commons.beanutils.BeanUtils2TestCase.testSeparateInstances");}};
-        //Set<String> testStateNames = smartSHARKAdapter.getTestStateNames();
+        Set<String> testStateNames = smartSHARKAdapter.getTestStateNames();
         for(String testName : testStateNames) {
+            propertyValuesToChange.put("testStatePattern", testName);
             try {
-                changePropertiesFile(args[1], args[2], args[3], testName);
+                changePropertiesFile(propertyValuesToChange);
                 Path newMavenFile = changeMavenFile(projectRoot, testName);
                 runMaven(newMavenFile);
             } catch (IOException | MavenInvocationException e) {
@@ -63,8 +80,7 @@ public class Main {
 
 
 
-    private static void changePropertiesFile(String projectName, String tagName, String instrumentationClassPattern,
-                                            String testName) throws IOException {
+    private static void changePropertiesFile(Map<String, String> values) throws IOException {
         Path dcdProperties = Paths.get(System.getenv("DCD_HOME"), "defect-call-depth.properties");
         Properties props = new Properties();
         try(FileInputStream in = new FileInputStream(dcdProperties.toFile())) {
@@ -75,11 +91,9 @@ public class Main {
 
 
         try(FileOutputStream out = new FileOutputStream(dcdProperties.toFile())) {
-            props.setProperty("projectName", projectName);
-            props.setProperty("tagName", tagName);
-            props.setProperty("instrumentationClassPattern", instrumentationClassPattern);
-
-            props.setProperty("testStatePattern", testName);
+            for(Map.Entry<String, String> entry: values.entrySet()) {
+                props.setProperty(entry.getKey(), entry.getValue());
+            }
             props.store(out, null);
         } catch (IOException e) {
             throw new IOException("Could not store properties at "+dcdProperties);
@@ -128,7 +142,11 @@ public class Main {
 
 
         Invoker invoker = new DefaultInvoker();
-
+        // We only want to print errored lines, other lines are not of interest
+        invoker.setOutputHandler(line -> {
+            if(line.startsWith("[ERROR]"))
+                System.out.println(line);
+        });
         InvocationResult result = invoker.execute(request);
 
         // Check if it returned successfully

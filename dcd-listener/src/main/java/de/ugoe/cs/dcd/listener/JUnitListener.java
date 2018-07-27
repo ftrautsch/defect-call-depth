@@ -18,6 +18,7 @@ package de.ugoe.cs.dcd.listener;
 
 
 import org.junit.runner.Description;
+import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 
 /**
@@ -26,14 +27,29 @@ import org.junit.runner.notification.RunListener;
 public class JUnitListener extends RunListener{
     protected CallController callController;
 
+    /*
     @Override
     public void testStarted(Description description) {
         getCallController().onTestStart();
     }
+    */
 
+    @Override
+    public void testRunStarted(Description description) throws Exception {
+        getCallController().onTestStart();
+    }
+
+    /*
     @Override
     public void testFinished(Description description) {
         callController.onTestFinish(getName(description));
+    }
+    */
+
+    @Override
+    public void testRunFinished(Result result) throws Exception {
+        callController.onTestFinish();
+        super.testRunFinished(result);
     }
 
     protected CallController getCallController() {
@@ -43,7 +59,4 @@ public class JUnitListener extends RunListener{
         return callController;
     }
 
-    private static String getName(Description description) {
-        return description.getClassName() + "." + description.getMethodName();
-    }
 }

@@ -16,6 +16,7 @@
 
 package de.ugoe.cs.dcd.listener;
 
+import de.ugoe.cs.dcd.config.ConfigurationReader;
 import de.ugoe.cs.dcd.smartshark.SmartSHARKAdapter;
 import de.ugoe.cs.smartshark.model.Mutation;
 import de.ugoe.cs.smartshark.model.MutationResult;
@@ -43,6 +44,7 @@ public class CallController {
     private boolean testStarted;
 
     private final SmartSHARKAdapter smartSHARKAdapter = SmartSHARKAdapter.getInstance();
+    private final ConfigurationReader configurationReader = ConfigurationReader.getInstance();
 
     // Visible for testing
     static CallController singleton;
@@ -74,15 +76,13 @@ public class CallController {
                     + "thus call depth and num calls can not be recorded.");
         }
         testStarted = true;
-        CallHelper.initialize();
+        //CallHelper.initialize();
     }
 
-    public synchronized void onTestFinish(String name) {
+    public synchronized void onTestFinish() {
         testStarted = false;
         Map<String, SortedSet<Integer>> problems = new HashMap<>();
-        TestState testState = smartSHARKAdapter.getTestStateForName(name);
-
-        System.out.println(CallHelper.getHitMutations());
+        TestState testState = smartSHARKAdapter.getTestStateForName(configurationReader.getTestStatePattern());
 
         for(MutationResult res: testState.getMutationResults()) {
             // If the test do not cover this mutation, we can not store the numCalls or call depth
@@ -110,7 +110,7 @@ public class CallController {
             }
         }
         smartSHARKAdapter.storeTestState(testState);
-        logger.warn("Detected the following problems for test "+name+": "+problems);
+        logger.warn("Detected the following problems for test "+configurationReader.getTestStatePattern()+": "+problems);
     }
 
 

@@ -21,6 +21,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import de.ugoe.cs.dcd.config.ConfigurationReader;
 import de.ugoe.cs.smartshark.model.Mutation;
+import de.ugoe.cs.smartshark.model.MutationResult;
 import de.ugoe.cs.smartshark.model.Project;
 import de.ugoe.cs.smartshark.model.Tag;
 import de.ugoe.cs.smartshark.model.TestState;
@@ -28,7 +29,6 @@ import de.ugoe.cs.smartshark.model.VCSSystem;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -55,6 +55,8 @@ public class SmartSHARKAdapter {
     private ObjectId commitId;
     private final Map<String, TestState> testStates = new HashMap<>();
     private final Map<ObjectId, Mutation> mutationMap = new HashMap<>();
+    private final Map<String, SortedSet<Integer>> insertMutationsWithLines = new HashMap<>();
+
 
 
     private static SmartSHARKAdapter singleton;
@@ -123,13 +125,36 @@ public class SmartSHARKAdapter {
     }
 
     private void setMutations() {
-        // Get all mutations in a map to access them easier later
-        // TODO instead of only the fist, create OR with all instrumentation class patterns
-        datastore.createQuery(Mutation.class)
-                .field("l_num").greaterThan(0)
-                .field("location").startsWithIgnoreCase(config.getFirstInstrumentationClassPatternAsString())
-                .forEach(mutation -> mutationMap.put(mutation.getId(), mutation));
+        // We only query for one test state by design
+        Query<TestState> query = datastore.createQuery(TestState.class)
+                .field("commit_id").equal(commitId)
+                .field("name").equal(config.getTestStatePattern());
 
+        Query<MutationResult> mutationResultQuery = datastore.createQuery(MutationResult.class)
+                .field("result").notEqual("NO_COVERAGE");
+
+        // Aggregate: Get all mutation_ids that are in the mutation_res array of this test state
+        Set<ObjectId> mutationIds = new HashSet<>();
+        datastore.createAggregation(TestState.class)
+                .match(query)
+                .unwind("mutation_res")
+                .match(mutationResultQuery)
+                .group("mutation_res.mutation_id")
+                .aggregate(Mutation.class)
+                .forEachRemaining(mutation -> mutationIds.add(mutation.getId()));
+
+        // 1) Query the mutations that have thse mutation_ids and put them in a map for later use.
+        // 2) Get the class name and affected line for each mutation and put them in the map
+        datastore.createQuery(Mutation.class)
+                .field("id").in(mutationIds)
+                .forEach(mut -> {
+                    mutationMap.put(mut.getId(), mut);
+                    String[] locationParts = mut.getLocation().split("\\.");
+                    String className = String.join(".", Arrays.copyOfRange(locationParts, 0, locationParts.length-1));
+                    SortedSet<Integer> lines = insertMutationsWithLines.getOrDefault(className, new TreeSet<>());
+                    lines.add(mut.getLineNumber());
+                    insertMutationsWithLines.put(className, lines);
+                });
     }
 
     public Mutation getMutationById(ObjectId mutationId) {
@@ -137,7 +162,9 @@ public class SmartSHARKAdapter {
     }
 
     public TestState getTestStateForName(String testName) {
-        return testStates.get(testName);
+        return datastore.createQuery(TestState.class)
+                .field("commit_id").equal(commitId)
+                .field("name").equal(testName).get();
     }
 
     public void storeTestState(TestState testState) {
@@ -147,73 +174,7 @@ public class SmartSHARKAdapter {
     }
 
     public Map<String,SortedSet<Integer>> getMutationsWithLines() {
-        Map<String, SortedSet<Integer>> insertMutationsWithLines = new HashMap<>();
-
-        // First get all test states with results
-        Set<ObjectId> testStatesWithMutationResults = new HashSet<>();
-        datastore.createQuery(TestState.class)
-                .field("commit_id").equal(commitId)
-                .field("name").equal(config.getTestStatePattern())
-                .field("mutation_res").exists()
-                .field("mutation_res").notEqual(null)
-                .project("_id", true)
-                .project("name", true)
-                .project("mutation_res", true)
-                .forEach(
-                        testState ->  {
-                            testStates.put(testState.getName(), testState);
-                            testStatesWithMutationResults.add(testState.getId());
-                        }
-                );
-
-        // Now query all mutations that are generated
-        Query<TestState> query = datastore.createQuery(TestState.class)
-                .field("_id").in(testStatesWithMutationResults);
-        Iterator<Mutation> aggregate = datastore.createAggregation(TestState.class)
-                .match(query)
-                .unwind("mutation_res")
-                .group("mutation_res.mutation_id")
-                .aggregate(Mutation.class);
-
-        aggregate.forEachRemaining(mutation -> {
-            Mutation mut = mutationMap.get(mutation.getId());
-
-            if(mut != null) {
-                String[] locationParts = mut.getLocation().split("\\.");
-                String className = String.join(".", Arrays.copyOfRange(locationParts, 0, locationParts.length-1));
-                SortedSet<Integer> lines = insertMutationsWithLines.getOrDefault(className, new TreeSet<>());
-                lines.add(mut.getLineNumber());
-                insertMutationsWithLines.put(className, lines);
-            }
-        });
-
         return insertMutationsWithLines;
+
     }
-
-    /*
-    public Set<String> getTestNames(String vcsSystemURL, String tagName) {
-        // Get vcsSystem
-        ObjectId vcsSystemId = datastore.createQuery(VCSSystem.class)
-                .field("url").equal(vcsSystemURL).get().getId();
-        // Get commitID from tag
-        ObjectId commitId = datastore.createQuery(Tag.class)
-                .field("vcs_system_id").equal(vcsSystemId)
-                .field("name").equal(tagName).get().getCommitId();
-
-        Set<String> testStatesWithMutationResults = new HashSet<>();
-
-        datastore.createQuery(TestState.class)
-                .field("commit_id").equal(commitId)
-                .field("mutation_res").exists()
-                .field("mutation_res").notEqual(null)
-                .project("name", true)
-                .forEach(
-                        testState ->  {
-                            testStatesWithMutationResults.add(testState.getName()+"()");
-                        }
-                );
-
-        return testStatesWithMutationResults;
-    }
-     */
 }

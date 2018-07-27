@@ -24,17 +24,11 @@ import java.util.Map;
 /**
  * @author Fabian Trautsch
  */
-public class CallHelper {
+public final class CallHelper {
     private static long callDepth = 0;
     private static long numCalls = 0;
 
     private final static Map<String, List<Long>> hitMutations = new HashMap<>();
-
-    public static synchronized void initialize() {
-        callDepth = 0;
-        numCalls = 0;
-        hitMutations.clear();
-    }
 
     public static synchronized void raiseDepth() {
         callDepth++;
