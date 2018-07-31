@@ -124,14 +124,15 @@ public class ASMInstrumenter implements ClassFileTransformer {
 
         if (configuration.isDebugEnabled()) {
             File output = new File(configuration.getDebugOut() + "/" + className + ".class");
-            try(FileOutputStream fos = new FileOutputStream(output)){
-                // Create Directory path for debugging
-                System.out.println("Storing: " + className);
-                boolean dirCreated = output.getParentFile().mkdirs();
-                logger.debug("Directory Created?: " + dirCreated);
+            System.out.println("Storing: " + className);
+
+            // Create Directory path for debugging
+            boolean dirCreated = output.getParentFile().mkdirs();
+            logger.debug("Directory Created?: " + dirCreated);
+
+            try (FileOutputStream fos = new FileOutputStream(output)) {
                 fos.write(b);
-            } catch(IOException e){
-                System.out.println("Could not store class: " + className + ". Error:" + e);
+            } catch (IOException e) {
                 logger.error("Could not store class: " + className + ". Error:" + e);
             }
         }

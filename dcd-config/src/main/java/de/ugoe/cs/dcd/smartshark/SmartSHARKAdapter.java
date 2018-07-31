@@ -130,6 +130,7 @@ public class SmartSHARKAdapter {
                 .field("commit_id").equal(commitId)
                 .field("name").equal(config.getTestStatePattern());
 
+
         Query<MutationResult> mutationResultQuery = datastore.createQuery(MutationResult.class)
                 .field("result").notEqual("NO_COVERAGE");
 
@@ -143,6 +144,9 @@ public class SmartSHARKAdapter {
                 .aggregate(Mutation.class)
                 .forEachRemaining(mutation -> mutationIds.add(mutation.getId()));
 
+        if(mutationIds.size() == 0) {
+            logger.warn("No mutations found for test "+config.getTestStatePattern());
+        }
         // 1) Query the mutations that have thse mutation_ids and put them in a map for later use.
         // 2) Get the class name and affected line for each mutation and put them in the map
         datastore.createQuery(Mutation.class)

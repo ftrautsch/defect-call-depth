@@ -27,20 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.appender.FileAppender;
-import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.layout.PatternLayout;
 
 /**
  * @author Fabian Trautsch
  */
 public class CallController {
-    private static final Logger logger = LogManager.getLogger();
     private boolean testStarted;
 
     private final SmartSHARKAdapter smartSHARKAdapter = SmartSHARKAdapter.getInstance();
@@ -50,16 +41,6 @@ public class CallController {
     static CallController singleton;
 
     private CallController() {
-
-        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
-        final Configuration config = ctx.getConfiguration();
-        PatternLayout layout = PatternLayout.newBuilder().withPattern("%d [%t] %-5p - %msg%n").build();
-        Appender appender = FileAppender.newBuilder().withFileName("/tmp/dcd.log")
-                .withName("File").withLayout(layout).build();
-        appender.start();
-        config.addAppender(appender);
-        config.getRootLogger().addAppender(appender, Level.WARN, null);
-        ctx.updateLoggers();
 
     }
 
@@ -83,6 +64,7 @@ public class CallController {
         testStarted = false;
         Map<String, SortedSet<Integer>> problems = new HashMap<>();
         TestState testState = smartSHARKAdapter.getTestStateForName(configurationReader.getTestStatePattern());
+
 
         for(MutationResult res: testState.getMutationResults()) {
             // If the test do not cover this mutation, we can not store the numCalls or call depth
@@ -110,7 +92,8 @@ public class CallController {
             }
         }
         smartSHARKAdapter.storeTestState(testState);
-        logger.warn("Detected the following problems for test "+configurationReader.getTestStatePattern()+": "+problems);
+        System.out.println("[WARN] Detected the following problems for test "+configurationReader.getTestStatePattern()+": "+problems);
+
     }
 
 

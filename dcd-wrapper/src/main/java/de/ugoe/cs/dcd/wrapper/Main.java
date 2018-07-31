@@ -63,7 +63,11 @@ public class Main {
 
         //Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.osgi.OSGiBundleTest.checkInject");}};
         //Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.pool.TestConcurrentBag.testConcurrentBag");}};
-        //Set<String> testStateNames = new HashSet<String>(){{add("org.apache.commons.beanutils.BeanUtils2TestCase.testSeparateInstances");}};
+        /*
+        Set<String> testStateNames = new HashSet<String>(){{
+            add("org.apache.commons.codec.digest.HmacAlgorithmsTest.testMacByteArary[HmacSHA1]");
+        }};
+        */
         Set<String> testStateNames = smartSHARKAdapter.getTestStateNames();
         for(String testName : testStateNames) {
             propertyValuesToChange.put("testStatePattern", testName);
@@ -72,7 +76,7 @@ public class Main {
                 Path newMavenFile = changeMavenFile(projectRoot, testName);
                 runMaven(newMavenFile);
             } catch (IOException | MavenInvocationException e) {
-                System.out.println("ERROR: "+e);
+                System.out.println("ERROR: " + e);
             }
         }
     }
@@ -144,7 +148,7 @@ public class Main {
         Invoker invoker = new DefaultInvoker();
         // We only want to print errored lines, other lines are not of interest
         invoker.setOutputHandler(line -> {
-            if(line.startsWith("[ERROR]"))
+            if(line.startsWith("[ERROR]") || line.startsWith("[WARN]"))
                 System.out.println(line);
         });
         InvocationResult result = invoker.execute(request);
