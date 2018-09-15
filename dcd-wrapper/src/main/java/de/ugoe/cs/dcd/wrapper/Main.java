@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -61,18 +62,33 @@ public class Main {
         SmartSHARKAdapter smartSHARKAdapter = SmartSHARKAdapter.getInstance();
 
 
-        //Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.osgi.OSGiBundleTest.checkInject");}};
-        //Set<String> testStateNames = new HashSet<String>(){{add("com.zaxxer.hikari.pool.TestConcurrentBag.testConcurrentBag");}};
+        //Set<String> testStateNames = new HashSet<String>(){{add("org.apache.commons.lang3.time.FastDateParserSDFTest.testUpperCase[19: KK 11 en_GB]");}};
         /*
         Set<String> testStateNames = new HashSet<String>(){{
-            add("org.apache.commons.codec.digest.HmacAlgorithmsTest.testMacByteArary[HmacSHA1]");
+            add("com.google.zxing.oned.Code128BlackBox1TestCase.testBlackBox");
         }};
         */
+
+
+        Set<String> testsToSkip = new HashSet<String>() {{
+            }};
         Set<String> testStateNames = smartSHARKAdapter.getTestStateNames();
+
         for(String testName : testStateNames) {
+            if(testsToSkip.contains(testName)) {
+                System.out.println("Skipping test: " + testName);
+            }
+            System.out.println("Executing maven for test: "+ testName);
+
             propertyValuesToChange.put("testStatePattern", testName);
             try {
                 changePropertiesFile(propertyValuesToChange);
+
+                if(testName.contains(",")) {
+                    testName = testName.replace(",", "?");
+                }
+
+
                 Path newMavenFile = changeMavenFile(projectRoot, testName);
                 runMaven(newMavenFile);
             } catch (IOException | MavenInvocationException e) {
@@ -127,7 +143,18 @@ public class Main {
 
         // Substitute placeholder with the correct test name that should be tested
         Map<String, String> valuesMap = new HashMap<>();
-        valuesMap.put("testToExecute",  replaceLast(testName, ".", "#"));
+
+        // We need to do this here, as we can have parameterized tests with a "." in it
+        String[] testNameParts = testName.split("\\[");
+        String classAndMethodPart = replaceLast(testNameParts[0], ".", "#");
+
+        StringBuilder rest = new StringBuilder();
+        rest.append(classAndMethodPart);
+        for(int i=1; i<=testNameParts.length-1; i++) {
+            rest.append("[");
+            rest.append(testNameParts[i]);
+        }
+        valuesMap.put("testToExecute",  rest.toString());
 
         StrSubstitutor sub = new StrSubstitutor(valuesMap);
         String resolvedString = sub.replace(content);

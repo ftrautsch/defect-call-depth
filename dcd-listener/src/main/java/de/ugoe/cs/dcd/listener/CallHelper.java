@@ -16,7 +16,9 @@
 
 package de.ugoe.cs.dcd.listener;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,16 +29,30 @@ import java.util.Map;
 public final class CallHelper {
     private static long callDepth = 0;
     private static long numCalls = 0;
+    private static Deque<String> stack = new ArrayDeque<String>();
+
 
     private final static Map<String, List<Long>> hitMutations = new HashMap<>();
 
-    public static synchronized void raiseDepth() {
+    public static synchronized void catchBlock(String caller){
+        // Method that is called in a catch block to lower the depth till we get to the call of the method that now
+        // catches the exception.
+        String name = "";
+        while(!name.equals(caller)) {
+            name = stack.pop();
+            callDepth--;
+        }
+    }
+
+    public static synchronized void raiseDepth(String callee) {
+        stack.push(callee);
         callDepth++;
         numCalls++;
     }
 
     public static synchronized void lowerDepth() {
         callDepth--;
+        stack.pop();
     }
 
     public static synchronized void hitMutation(String className, int lineNumber) {

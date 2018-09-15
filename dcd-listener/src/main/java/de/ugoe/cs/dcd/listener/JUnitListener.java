@@ -48,7 +48,7 @@ public class JUnitListener extends RunListener{
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        callController.onTestFinish();
+        callController.onTestFinish(result.getRunCount());
         super.testRunFinished(result);
     }
 

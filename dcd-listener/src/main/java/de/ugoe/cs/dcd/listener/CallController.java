@@ -60,39 +60,44 @@ public class CallController {
         //CallHelper.initialize();
     }
 
-    public synchronized void onTestFinish() {
-        testStarted = false;
-        Map<String, SortedSet<Integer>> problems = new HashMap<>();
-        TestState testState = smartSHARKAdapter.getTestStateForName(configurationReader.getTestStatePattern());
+    public synchronized void onTestFinish(int numTestsRun) {
+
+        if(numTestsRun != 1) {
+            System.out.println("[ERROR] Run " + numTestsRun + " tests for: "+configurationReader.getTestStatePattern());
+        } else {
+            testStarted = false;
+            Map<String, SortedSet<Integer>> problems = new HashMap<>();
+            TestState testState = smartSHARKAdapter.getTestStateForName(configurationReader.getTestStatePattern());
 
 
-        for(MutationResult res: testState.getMutationResults()) {
-            // If the test do not cover this mutation, we can not store the numCalls or call depth
-            if(res.getResult().equals("NO_COVERAGE")) {
-                continue;
-            }
-
-            Mutation mutation = smartSHARKAdapter.getMutationById(res.getMutationId());
-
-            String[] locationParts = mutation.getLocation().split("\\.");
-            String mutationLocationClass = String.join(".", Arrays.copyOfRange(locationParts, 0, locationParts.length-1));
-
-
-            List<Long> results = CallHelper.getHitMutations().get(mutationLocationClass+"%%"+mutation.getLineNumber());
-
-            if(results == null) {
-                if(res.getResult().equals("KILLED") || res.getResult().equals("SURVIVED")) {
-                    SortedSet<Integer> problemsInTest = problems.getOrDefault(mutationLocationClass, new TreeSet<>());
-                    problemsInTest.add(mutation.getLineNumber());
-                    problems.put(mutationLocationClass, problemsInTest);
+            for (MutationResult res : testState.getMutationResults()) {
+                // If the test do not cover this mutation, we can not store the numCalls or call depth
+                if (res.getResult().equals("NO_COVERAGE")) {
+                    continue;
                 }
-            } else {
-                res.setCallDepth(results.get(0));
-                res.setNumCalls(results.get(1));
+
+                Mutation mutation = smartSHARKAdapter.getMutationById(res.getMutationId());
+
+                String[] locationParts = mutation.getLocation().split("\\.");
+                String mutationLocationClass = String.join(".", Arrays.copyOfRange(locationParts, 0, locationParts.length - 1));
+
+
+                List<Long> results = CallHelper.getHitMutations().get(mutationLocationClass + "%%" + mutation.getLineNumber());
+
+                if (results == null) {
+                    if (res.getResult().equals("KILLED") || res.getResult().equals("SURVIVED")) {
+                        SortedSet<Integer> problemsInTest = problems.getOrDefault(mutationLocationClass, new TreeSet<>());
+                        problemsInTest.add(mutation.getLineNumber());
+                        problems.put(mutationLocationClass, problemsInTest);
+                    }
+                } else {
+                    res.setCallDepth(results.get(0));
+                    res.setNumCalls(results.get(1));
+                }
             }
+            smartSHARKAdapter.storeTestState(testState);
+            System.out.println("[WARN] Detected the following problems for test " + configurationReader.getTestStatePattern() + ": " + problems);
         }
-        smartSHARKAdapter.storeTestState(testState);
-        System.out.println("[WARN] Detected the following problems for test "+configurationReader.getTestStatePattern()+": "+problems);
 
     }
 

@@ -95,7 +95,6 @@ public class ASMInstrumenter implements ClassFileTransformer {
             methodInformation.clear();
             gatherInformation(className, bytes);
             // Enhance Class
-
             return enhanceClass(className, bytes);
 
             //return bytes;

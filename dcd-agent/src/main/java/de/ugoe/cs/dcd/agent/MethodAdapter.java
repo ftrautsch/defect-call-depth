@@ -32,6 +32,7 @@ class MethodAdapter extends MethodVisitor implements Opcodes {
     private final String fqn;
     private final String className;
     private final List<Pattern> instrumentationPattern;
+    private Label exceptionHandler;
 
     public MethodAdapter(final MethodVisitor mv, SortedSet<Integer> mutationLines, String fqn,
                          SortedSet<Integer> linesWithMutationsWithoutMethod, String className,
@@ -45,11 +46,28 @@ class MethodAdapter extends MethodVisitor implements Opcodes {
     }
 
     @Override
+    public void visitLabel(Label label) {
+        super.visitLabel(label);
+        if(label==exceptionHandler) {
+            mv.visitLdcInsn(fqn);
+            mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/dcd/listener/CallHelper", "catchBlock", "(Ljava/lang/String;)V", false);
+        }
+    }
+
+    @Override
+    public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
+        exceptionHandler=handler;
+        super.visitTryCatchBlock(start, end, handler, type);
+
+    }
+
+    @Override
     public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
         // Only trace calls that are within the pattern (e.g., excluding calls to external libraries)
         String calleeClassName = owner.replace("/", ".");
         if(classNameMatchesAny(calleeClassName)) {
-            mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/dcd/listener/CallHelper", "raiseDepth", "()V", false);
+            mv.visitLdcInsn(fqn);
+            mv.visitMethodInsn(INVOKESTATIC, "de/ugoe/cs/dcd/listener/CallHelper", "raiseDepth", "(Ljava/lang/String;)V", false);
         }
 
         mv.visitMethodInsn(opcode, owner, name, desc, itf);
